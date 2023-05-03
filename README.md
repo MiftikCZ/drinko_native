@@ -11,4 +11,4 @@
 - [x] Barvy měnící se podle tapety (android 12+)
 
 ## Stažení
-- [drinko_native.apk](./drinko_native.apk)
+- [drinko_native.apk](https://github.com/MiftikCZ/drinko_native/blob/master/drinko_native.apk?raw=true)
