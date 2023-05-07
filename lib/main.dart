@@ -76,10 +76,10 @@ class _MainPageRouteState extends State<MainPageRoute> {
   void addVoda(double howMuchInMl) async {
     int counter = (db.getInt('waterDrank') ?? 0) + howMuchInMl.toInt();
 
-    await db.setInt('waterDrank', counter);
-
-    setState(() {
-      todayDrankInMl = counter;
+    await db.setInt('waterDrank', counter).then((value) {
+      setState(() {
+        todayDrankInMl = counter;
+      });
     });
   }
 
@@ -91,7 +91,7 @@ class _MainPageRouteState extends State<MainPageRoute> {
           backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(
-              bottom: Radius.circular(28),
+              bottom: Radius.circular(18),
             ),
           ),
           title: Container(
@@ -103,93 +103,50 @@ class _MainPageRouteState extends State<MainPageRoute> {
                   verticalDirection: VerticalDirection.down,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text("Dnes jsi vypil skleniček:",
+                    Text("Zbývá ti skleniček:",
                         style: TextStyle(
                             color: Theme.of(context)
                                 .colorScheme
-                                .onSecondaryContainer)),
+                                .onSecondaryContainer
+                                .withOpacity(0.5))),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.local_drink,
                             size: 34,
-                            color: Theme.of(context).colorScheme.secondary),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSecondaryContainer),
                         Text(
-                            " %1/%2 "
-                                .replaceAll(
-                                    "%1",
-                                    (((todayDrankInMl / sklenickaObjemInMl) * 2)
-                                                .round() /
-                                            2)
-                                        .toString())
-                                .replaceAll(
-                                    "%2",
-                                    (((goalInMl / sklenickaObjemInMl) * 2)
-                                                .round() /
-                                            2)
-                                        .toString()),
+                            " ${((((goalInMl - todayDrankInMl) / sklenickaObjemInMl) * 2).floor() / 2)}",
                             style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 34,
-                                color:
-                                    Theme.of(context).colorScheme.secondary)),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSecondaryContainer)),
                       ],
                     )
                   ]),
             ),
           )),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ListView(children: [
-          MainPageInfoContainer(
-            nadpis_: "Zatím jsi vypil",
-            child_: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Row(children: [
-                    Text("$todayDrankInMl ml",
-                        style: const TextStyle(fontWeight: FontWeight.w500)),
-                    const Spacer(),
-                    Text("/ ${goalInMl.toString()} ml")
-                  ]),
-                  Row(children: [
-                    Text("${todayDrankInMl / 1000} litrů",
-                        style: const TextStyle(fontWeight: FontWeight.w500)),
-                    const Spacer(),
-                    Text("/ ${(goalInMl / 1000).toString()} litrů")
-                  ])
-                ]),
-          ),
-          const Divider(),
-          MainPageInfoContainer(
-            nadpis_: "Musíš vypít ještě",
-            child_: todayDrankInMl >= goalInMl
-                ? const Text("Dnes máš vypito!")
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                        Row(
-                          children: [
-                            Text((goalInMl - todayDrankInMl).toString(),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w500)),
-                            const Text(" ml")
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                                ((goalInMl - todayDrankInMl) / 1000).toString(),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w500)),
-                            const Text(" litrů")
-                          ],
-                        ),
-                      ]),
+      body: GridView.count(
+        primary: false,
+        padding: const EdgeInsets.all(10),
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        crossAxisCount: 2,
+        children: [
+          DataInfoGridWidget(hodnota: "$todayDrankInMl", goal: "${goalInMl}ml"),
+          DataInfoGridWidget(
+              hodnota:
+                  "${(((todayDrankInMl / sklenickaObjemInMl) * 2).round() / 2)}",
+              goal: "${(((goalInMl / sklenickaObjemInMl) * 2).round() / 2)}"),
+          DataInfoGridWidget(
+            hodnota: "${((todayDrankInMl / goalInMl) * 100).round()}%",
+            goal: "",
           )
-        ]),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -208,35 +165,34 @@ class _MainPageRouteState extends State<MainPageRoute> {
   }
 }
 
-class HeaderInfoText extends StatelessWidget {
-  final String text;
-  const HeaderInfoText({Key? key, required this.text}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(fontSize: 20));
-  }
-}
-
-class MainPageInfoContainer extends StatelessWidget {
-  final Widget? child_;
-  final String? nadpis_;
-  const MainPageInfoContainer({Key? key, this.child_, this.nadpis_})
+class DataInfoGridWidget extends StatelessWidget {
+  final String hodnota;
+  final String goal;
+  const DataInfoGridWidget(
+      {Key? key, required this.hodnota, required this.goal})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Text(nadpis_ ?? "něco víc",
-              style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
-          DefaultTextStyle(
-              style: TextStyle(
-                  fontSize: 22, color: Theme.of(context).colorScheme.onSurface),
-              child: child_ ?? const Text("?"))
-        ]);
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+          border: Border.all(
+              width: 1, color: Theme.of(context).colorScheme.outlineVariant),
+          borderRadius: const BorderRadius.all(Radius.circular(6))),
+      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Text(
+          hodnota,
+          style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontSize: 26,
+              fontWeight: FontWeight.w500),
+        ),
+        Text(goal != "" ? " / $goal" : "",
+            style: TextStyle(
+                fontSize: 20,
+                color: Theme.of(context).colorScheme.outlineVariant))
+      ]),
+    );
   }
 }
