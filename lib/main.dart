@@ -2,13 +2,13 @@ import 'package:dynamic_color/dynamic_color.dart';
 
 import 'package:flutter/material.dart';
 import 'components/add_sklenicka_route.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(MainApp());
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
   static final _defaultLightColorScheme =
       ColorScheme.fromSwatch(primarySwatch: Colors.blue);
 
@@ -47,9 +47,39 @@ class _MainPageRouteState extends State<MainPageRoute> {
   int sklenickaObjemInMl = 400;
   int todayDrankInMl = 0;
 
-  void addVoda(double howMuchInMl) {
+  late SharedPreferences db;
+  @override
+  void initState() {
+    super.initState();
+
+    initPrefs();
+  }
+
+  String getTodayTime() {
+    DateTime now = DateTime.now();
+    return "${now.day}.${now.month}.${now.year}";
+  }
+
+  Future<void> initPrefs() async {
+    db = await SharedPreferences.getInstance();
+
+    if (db.getString("waterLastDate") != getTodayTime()) {
+      db.setString("waterLastDate", getTodayTime());
+      db.setInt("waterDrank", 0);
+    }
+
     setState(() {
-      todayDrankInMl += howMuchInMl.toInt();
+      todayDrankInMl = db.getInt("waterDrank") ?? 888;
+    });
+  }
+
+  void addVoda(double howMuchInMl) async {
+    int counter = (db.getInt('waterDrank') ?? 0) + howMuchInMl.toInt();
+
+    await db.setInt('waterDrank', counter);
+
+    setState(() {
+      todayDrankInMl = counter;
     });
   }
 

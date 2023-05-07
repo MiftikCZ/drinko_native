@@ -10,6 +10,7 @@ dependencies:
   dynamic_color: ^1.6.3
   flutter:
     sdk: flutter
+  shared_preferences: ^2.1.0
 
 dev_dependencies:
   flutter_test:
