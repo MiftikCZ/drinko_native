@@ -68,8 +68,13 @@ class _MainPageRouteState extends State<MainPageRoute> {
       db.setInt("waterDrank", 0);
     }
 
+    db.setInt("sklenickaObjem", db.getInt("sklenickaObjem") ?? 400);
+    db.setInt("denniCil", db.getInt("denniCil") ?? 2000);
+
     setState(() {
-      todayDrankInMl = db.getInt("waterDrank") ?? 888;
+      todayDrankInMl = db.getInt("waterDrank") ?? 0;
+      sklenickaObjemInMl = db.getInt("sklenickaObjem") ?? 400;
+      goalInMl = db.getInt("denniCil") ?? 2000;
     });
   }
 
@@ -83,13 +88,84 @@ class _MainPageRouteState extends State<MainPageRoute> {
     });
   }
 
+  void setSklenkaObjem(double howMuchInMl) async {
+    int counter = howMuchInMl.toInt();
+
+    db.setInt('sklenickaObjem', counter).then((value) {
+      setState(() {
+        sklenickaObjemInMl = counter;
+      });
+    });
+  }
+
+  void setDenniCil(double howMuchInMl) async {
+    int counter = howMuchInMl.toInt();
+
+    db.setInt('denniCil', counter).then((value) {
+      setState(() {
+        goalInMl = counter;
+      });
+    });
+  }
+
+  Widget CustomizeElButton(String appBarTitle, String inputHint,
+      Function(double) setTheValue, String buttonText) {
+    return ElevatedButton(
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+            return Scaffold(
+                appBar: AppBar(title: Text(appBarTitle)),
+                body: TextField(
+                  keyboardType: TextInputType.number,
+                  autofocus: true,
+                  onSubmitted: (val) {
+                    setTheValue(double.parse(val));
+                    Navigator.pop(context);
+                  },
+                  decoration: InputDecoration(
+                      hintText: inputHint,
+                      contentPadding: const EdgeInsets.all(16.0)),
+                ));
+          }));
+        },
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(buttonText),
+          ],
+        ));
+  }
+
   @override
   Widget build(BuildContext context) {
-    Size sizeAppBarContext = MediaQuery.of(context).size;
+    // Size sizeAppBarContext = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-          leading: IconButton(icon: Icon(Icons.menu), onPressed: () {})),
+          leading: IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (context) {
+                  return Scaffold(
+                      appBar: AppBar(title: const Text("Přizpůsobit")),
+                      body: Center(
+                        child: Column(children: [
+                          CustomizeElButton(
+                              "Objem skleničky (ml)",
+                              'Objem tvé skleničky v ML',
+                              setSklenkaObjem,
+                              "Objem skleničky"),
+                          CustomizeElButton(
+                              "Denní cíl (ml)",
+                              'Denní cíl v ML (2L = 2000)',
+                              setDenniCil,
+                              "Denní cíl")
+                        ]),
+                      ));
+                }));
+              })),
       body: Column(
         children: [
           Container(
@@ -119,7 +195,8 @@ class _MainPageRouteState extends State<MainPageRoute> {
                                   .colorScheme
                                   .onSecondaryContainer),
                           Text(
-                              " ${((((goalInMl - todayDrankInMl) / sklenickaObjemInMl) * 2).floor() / 2)}",
+                              " ${((((goalInMl - todayDrankInMl) / sklenickaObjemInMl) * 2).floor() / 2)}"
+                                  .replaceAll(RegExp(r'\.0'), ""),
                               style: TextStyle(
                                   fontWeight: FontWeight.w500,
                                   fontSize: 34,
@@ -143,9 +220,11 @@ class _MainPageRouteState extends State<MainPageRoute> {
                     hodnota: "$todayDrankInMl", goal: "${goalInMl}ml"),
                 DataInfoGridWidget(
                     hodnota:
-                        "${(((todayDrankInMl / sklenickaObjemInMl) * 2).round() / 2)}",
+                        "${(((todayDrankInMl / sklenickaObjemInMl) * 2).round() / 2)}"
+                            .replaceAll(RegExp(r'\.0'), ""),
                     goal:
-                        "${(((goalInMl / sklenickaObjemInMl) * 2).round() / 2)}"),
+                        "${(((goalInMl / sklenickaObjemInMl) * 2).round() / 2)}"
+                            .replaceAll(RegExp(r'\.0'), "")),
                 DataInfoGridWidget(
                   hodnota: "${((todayDrankInMl / goalInMl) * 100).round()}%",
                   goal: "",
