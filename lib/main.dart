@@ -76,7 +76,7 @@ class _MainPageRouteState extends State<MainPageRoute> {
   void addVoda(double howMuchInMl) async {
     int counter = (db.getInt('waterDrank') ?? 0) + howMuchInMl.toInt();
 
-    await db.setInt('waterDrank', counter).then((value) {
+    db.setInt('waterDrank', counter).then((value) {
       setState(() {
         todayDrankInMl = counter;
       });
@@ -85,67 +85,74 @@ class _MainPageRouteState extends State<MainPageRoute> {
 
   @override
   Widget build(BuildContext context) {
+    Size sizeAppBarContext = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-          toolbarHeight: 200,
           backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(
-              bottom: Radius.circular(18),
+          leading: IconButton(icon: Icon(Icons.menu), onPressed: () {})),
+      body: Column(
+        children: [
+          Container(
+              decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(18),
+                      bottomRight: Radius.circular(18))),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                    verticalDirection: VerticalDirection.down,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text("Zbývá ti skleniček:",
+                          style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSecondaryContainer
+                                  .withOpacity(0.5))),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.local_drink,
+                              size: 34,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSecondaryContainer),
+                          Text(
+                              " ${((((goalInMl - todayDrankInMl) / sklenickaObjemInMl) * 2).floor() / 2)}",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 34,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSecondaryContainer)),
+                        ],
+                      )
+                    ]),
+              )),
+          Expanded(
+            child: GridView.count(
+              childAspectRatio: 1.8,
+              primary: false,
+              padding: const EdgeInsets.all(10),
+              crossAxisSpacing: 0,
+              mainAxisSpacing: 0,
+              crossAxisCount: 2,
+              children: [
+                DataInfoGridWidget(
+                    hodnota: "$todayDrankInMl", goal: "${goalInMl}ml"),
+                DataInfoGridWidget(
+                    hodnota:
+                        "${(((todayDrankInMl / sklenickaObjemInMl) * 2).round() / 2)}",
+                    goal:
+                        "${(((goalInMl / sklenickaObjemInMl) * 2).round() / 2)}"),
+                DataInfoGridWidget(
+                  hodnota: "${((todayDrankInMl / goalInMl) * 100).round()}%",
+                  goal: "",
+                )
+              ],
             ),
           ),
-          title: Container(
-            height: 200,
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                  verticalDirection: VerticalDirection.down,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text("Zbývá ti skleniček:",
-                        style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSecondaryContainer
-                                .withOpacity(0.5))),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.local_drink,
-                            size: 34,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSecondaryContainer),
-                        Text(
-                            " ${((((goalInMl - todayDrankInMl) / sklenickaObjemInMl) * 2).floor() / 2)}",
-                            style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 34,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSecondaryContainer)),
-                      ],
-                    )
-                  ]),
-            ),
-          )),
-      body: GridView.count(
-        primary: false,
-        padding: const EdgeInsets.all(10),
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        crossAxisCount: 2,
-        children: [
-          DataInfoGridWidget(hodnota: "$todayDrankInMl", goal: "${goalInMl}ml"),
-          DataInfoGridWidget(
-              hodnota:
-                  "${(((todayDrankInMl / sklenickaObjemInMl) * 2).round() / 2)}",
-              goal: "${(((goalInMl / sklenickaObjemInMl) * 2).round() / 2)}"),
-          DataInfoGridWidget(
-            hodnota: "${((todayDrankInMl / goalInMl) * 100).round()}%",
-            goal: "",
-          )
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -174,12 +181,7 @@ class DataInfoGridWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-          border: Border.all(
-              width: 1, color: Theme.of(context).colorScheme.outlineVariant),
-          borderRadius: const BorderRadius.all(Radius.circular(6))),
+    return Card(
       child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         Text(
           hodnota,
@@ -191,7 +193,7 @@ class DataInfoGridWidget extends StatelessWidget {
         Text(goal != "" ? " / $goal" : "",
             style: TextStyle(
                 fontSize: 20,
-                color: Theme.of(context).colorScheme.outlineVariant))
+                color: Theme.of(context).colorScheme.onSurfaceVariant))
       ]),
     );
   }
